@@ -1,0 +1,26 @@
+sudo: required
+
+services:
+  - docker
+
+before_install:
+  - docker build -t anantvir/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run anantvir/react-test npm test -- --coverage
+
+after_success:
+  - docker build -t anantvir/multi-client ./client
+  - docker build -t anantvir/multi-nginx ./nginx
+  - docker build -t anantvir/multi-server ./server
+  - docker vuild -t anantvir/multi-worker ./worker
+
+  # Login to Docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+
+  # Take those images and push them to dockerhub
+  - docker push anantvir/multi-client
+  - docker push anantvir/multi-nginx
+  - docker push anantvir/multi-server
+  - docker push anantvir/multi-worker
+
